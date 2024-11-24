@@ -10,17 +10,16 @@ def relu(x, derivative=False):
     return np.maximum(0, x)
 
 def sigmoid(x, derivative=False):
-    output = 1 / (1 + np.exp(-x))
-    output = np.clip(output, 1e-7, 1 - 1e-7)  # 클리핑 추가
     if derivative:
-        return output * (1 - output)
-    return output
+        y = sigmoid(x)
+        return y * (1 - y)
+    return 1 / (1 + np.exp(-x))
 
 # 손실 함수
 def mse_loss(y_true, y_pred, derivative=False):
     if derivative:
-        return y_pred - y_true
-    return np.mean((y_pred - y_true) ** 2)
+        return (y_pred - y_true)
+    return np.mean((y_pred - y_true) ** 2)/2
 
 # 데이터 로드 함수
 def load_data(train_file, test_file):
@@ -47,7 +46,7 @@ class NN:
         self.layer_4 = self.initialize_layer(64, 1)
 
     def initialize_layer(self, input_features, output_features):
-        std = np.sqrt(2.0 / input_features)  # He Initialization
+        std = 1/ input_features
         weights = np.random.normal(0, std, (input_features, output_features))
         biases = np.zeros((1, output_features))
         return {"weights": weights, "biases": biases}
@@ -68,9 +67,9 @@ class NN:
         
         return self.a4
 
-    def backward(self, X, y, learning_rate=0.003):
+    def backward(self, X, y, learning_rate=0.01):
         # 출력층 기울기 계산
-        dz4 = mse_loss(self.a4, y, derivative=True) * sigmoid(self.z4, derivative=True)
+        dz4 = mse_loss(y,self.a4, derivative=True) * sigmoid(self.z4, derivative=True)
         dw4 = np.dot(self.a3.T, dz4)
         db4 = np.sum(dz4, axis=0)
 
@@ -99,8 +98,25 @@ class NN:
         self.layer_1["weights"] -= learning_rate * dw1
         self.layer_1["biases"] -= learning_rate * db1
 
+
+
+def decision_boundary(model, X, y):
+    h = 0.01
+    x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+    Z = model.forward(np.c_[xx.ravel(), yy.ravel()])
+    Z = Z.reshape(xx.shape)
+
+    plt.clf()
+    plt.contourf(xx, yy, Z, alpha=0.8)
+    plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
+    plt.xlim(xx.min(), xx.max())
+    plt.ylim(yy.min(), yy.max())
+    plt.savefig('decision_boundary.png')
+
 # 학습 함수
-def train_model(model, X_train, y_train, X_test, y_test, epochs=1500):
+def train_model(model, X_train, y_train, X_test, y_test, epochs=15000):
     train_losses = []  # 훈련 손실 저장 리스트
     test_losses = []   # 테스트 손실 저장 리스트
 
@@ -123,16 +139,22 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=1500):
             print(f"Epoch {epoch+1}/{epochs}")
             print(f"Train Loss: {train_loss:.6f}, Test Loss: {test_loss:.6f}")
 
-    # 손실 그래프 시각화 (Smoothing 적용)
-    plt.figure(figsize=(10, 5))
-    plt.plot(range(epochs), train_losses, label= 'Train Loss', color='blue')
-    plt.plot(range(epochs), test_losses, label='Test Loss', color='orange')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.title('Training and Test Loss over Epochs')
-    plt.legend()
-    plt.grid()
-    plt.show()
+            # 손실 그래프 시각화 (Smoothing 적용)
+            if epoch > 0:
+                plt.clf()
+                plt.plot(range(epoch+1), train_losses, label= 'Train Loss', color='blue')
+                plt.plot(range(epoch+1), test_losses, label='Test Loss', color='orange')
+                plt.xlabel('Epochs')
+                plt.ylabel('Loss')
+                plt.title('Training and Test Loss over Epochs')
+                plt.legend()
+                plt.grid()
+                plt.savefig('loss_plot.png')
+                
+            # Decision Boundary 그리기
+        if epoch % 1000 == 0 or epoch == epochs - 1:
+            decision_boundary(model, X_train, y_train)
+
 
 
 # 데이터 경로 설정 및 실행
