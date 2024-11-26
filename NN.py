@@ -2,7 +2,6 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 # 활성화 함수
 def relu(x, derivative=False):
     if derivative:
@@ -67,7 +66,7 @@ class NN:
         
         return self.a4
 
-    def backward(self, X, y, learning_rate=0.01):
+    def backward(self, X, y, learning_rate=0.005):
         # 출력층 기울기 계산
         dz4 = mse_loss(y,self.a4, derivative=True) * sigmoid(self.z4, derivative=True)
         dw4 = np.dot(self.a3.T, dz4)
@@ -98,8 +97,6 @@ class NN:
         self.layer_1["weights"] -= learning_rate * dw1
         self.layer_1["biases"] -= learning_rate * db1
 
-
-
 def decision_boundary(model, X, y):
     h = 0.01
     x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
@@ -109,14 +106,15 @@ def decision_boundary(model, X, y):
     Z = Z.reshape(xx.shape)
 
     plt.clf()
-    plt.contourf(xx, yy, Z, alpha=0.8)
-    plt.scatter(X[:, 0], X[:, 1], c=y, s=40)
+    plt.scatter(X[:, 0], X[:, 1], c=y,cmap="coolwarm", s=40)
+    plt.contourf(xx, yy, Z, levels=30, cmap="coolwarm", alpha=0.5)
     plt.xlim(xx.min(), xx.max())
     plt.ylim(yy.min(), yy.max())
+    plt.legend(["Neural Network Output: spiral"])
     plt.savefig('decision_boundary.png')
 
 # 학습 함수
-def train_model(model, X_train, y_train, X_test, y_test, epochs=15000):
+def train_model(model, X_train, y_train, X_test, y_test, epochs=1000):
     train_losses = []  # 훈련 손실 저장 리스트
     test_losses = []   # 테스트 손실 저장 리스트
 
@@ -135,7 +133,7 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=15000):
         test_losses.append(test_loss)
 
         # Epoch별 결과 출력
-        if epoch % 100 == 0 or epoch == epochs - 1:
+        if epoch % 1000 == 0 or epoch == epochs - 1:
             print(f"Epoch {epoch+1}/{epochs}")
             print(f"Train Loss: {train_loss:.6f}, Test Loss: {test_loss:.6f}")
 
@@ -152,7 +150,7 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=15000):
                 plt.savefig('loss_plot.png')
                 
             # Decision Boundary 그리기
-        if epoch % 1000 == 0 or epoch == epochs - 1:
+        if epoch % 100 == 0 or epoch == epochs - 1:
             decision_boundary(model, X_train, y_train)
 
 
