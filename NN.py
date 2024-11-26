@@ -111,7 +111,7 @@ def decision_boundary(model, X, y):
     plt.xlim(xx.min(), xx.max())
     plt.ylim(yy.min(), yy.max())
     plt.legend(["Neural Network Output: spiral"])
-    plt.savefig('decision_boundary.png')
+    plt.savefig('photos/decision_boundary.png')
 
 # 학습 함수
 def train_model(model, X_train, y_train, X_test, y_test, epochs=1000):
@@ -147,7 +147,7 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=1000):
                 plt.title('Training and Test Loss over Epochs')
                 plt.legend()
                 plt.grid()
-                plt.savefig('loss_plot.png')
+                plt.savefig('photos/loss_plot.png')
                 
             # Decision Boundary 그리기
         if epoch % 100 == 0 or epoch == epochs - 1:
@@ -156,8 +156,8 @@ def train_model(model, X_train, y_train, X_test, y_test, epochs=1000):
 
 
 # 데이터 경로 설정 및 실행
-train_file = "spiral_trainset.json"
-test_file = "spiral_testset.json"
+train_file = "data_set/spiral_testset.json"
+test_file = "data_set/spiral_testset.json"
 
 X_train, y_train, X_test, y_test = load_data(train_file=train_file,test_file=test_file )
 
